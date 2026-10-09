@@ -149,13 +149,13 @@ data "aws_ami" "ubuntu_minimal" {
 # 8. EC2 Instance
 resource "aws_instance" "k3s_node" {
   ami                    = data.aws_ami.ubuntu_minimal.id
-  instance_type          = "t3.small"
+  instance_type          = var.instance_type
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.node_sg.id]
   key_name               = aws_key_pair.auth.key_name
 
   root_block_device {
-    volume_size           = 30
+    volume_size           = var.disk_size_gb
     volume_type           = "gp3"
     encrypted             = true
     delete_on_termination = true
@@ -165,8 +165,8 @@ resource "aws_instance" "k3s_node" {
   }
 
   tags = {
-    Name        = "nexus-k3s-node"
-    Environment = "dev"
+    Name        = var.node_name
+    Environment = var.environment
     Project     = "nexus-platform"
   }
 }
@@ -177,6 +177,6 @@ resource "local_file" "ansible_inventory" {
     [k3s_nodes]
     nexus-k3s-master ansible_host=${aws_instance.k3s_node.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=${pathexpand(var.ssh_private_key_path)}
   EOT
-  filename        = "${path.module}/../ansible/inventory.ini"
+  filename        = "${path.module}/../ansible/inventories/${var.environment}.ini"
   file_permission = "0644"
 }
