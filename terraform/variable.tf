@@ -48,9 +48,8 @@ variable "disk_size_gb" {
   default     = 30
 }
 
-# --- KMS variables---
 variable "kms_deletion_window_in_days" {
-  description = "Perioada de asteptare inainte de stergerea definitiva a cheii KMS (zile)"
+  description = "Duration in days before the KMS key is permanently deleted"
   type        = number
   default     = 7
 }
