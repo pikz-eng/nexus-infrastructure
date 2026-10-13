@@ -153,7 +153,70 @@ data "aws_ami" "ubuntu_minimal" {
   }
 }
 
-# 8. EC2 Instance
+
+# 8. --- AWS KMS Key for Vault Auto-Unseal ---
+resource "aws_kms_key" "vault" {
+  description             = "KMS Key for HashiCorp Vault Auto-Unseal"
+  deletion_window_in_days = var.kms_deletion_window_in_days
+
+  tags = {
+    Name    = "vault-auto-unseal-key"
+    Project = "nexus-platform"
+  }
+}
+
+# 9. --- IAM Role and Instance Profile for K3s Node ---
+resource "aws_iam_role" "k3s_node_role" {
+  name = "nexus-k3s-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Project = "nexus-platform"
+  }
+}
+
+resource "aws_iam_policy" "vault_kms_unseal" {
+  name        = "nexus-vault-kms-unseal-policy"
+  description = "Allows Vault pod to decrypt master key via AWS KMS"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = aws_kms_key.vault.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "vault_kms_attach" {
+  role       = aws_iam_role.k3s_node_role.name
+  policy_arn = aws_iam_policy.vault_kms_unseal.arn
+}
+
+resource "aws_iam_instance_profile" "k3s_profile" {
+  name = "nexus-k3s-instance-profile"
+  role = aws_iam_role.k3s_node_role.name
+}
+# 10. EC2 Instance
 resource "aws_instance" "k3s_node" {
   ami                    = data.aws_ami.ubuntu_minimal.id
   instance_type          = var.instance_type
@@ -178,7 +241,7 @@ resource "aws_instance" "k3s_node" {
   }
 }
 
-# 9. Automatic export to inventory.ini
+# 11. Automatic export to inventory.ini
 resource "local_file" "ansible_inventory" {
   content = <<-EOT
     [k3s_nodes]
