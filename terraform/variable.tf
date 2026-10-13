@@ -17,12 +17,14 @@ variable "ssh_private_key_path" {
   default     = "~/.ssh/id_rsa"
 }
 
+
+
 # --- Environment variables---
 
 variable "environment" {
-  description = "Deployment environment (staging, production)"
+  description = "Deployment environment"
   type        = string
-  default     = "staging"
+  default     = "dev"
 }
 
 variable "instance_type" {
@@ -34,7 +36,7 @@ variable "instance_type" {
 variable "node_name" {
   description = "Name tag for the EC2 node"
   type        = string
-  default     = "nexus-k3s-staging"
+  default     = "nexus-k3s-node"
 }
 
 variable "disk_size_gb" {
@@ -42,7 +44,7 @@ variable "disk_size_gb" {
   type        = number
   default     = 30
 }
-
+# --- KMS variables---
 variable "kms_deletion_window_in_days" {
   description = "Duration in days before the KMS key is permanently deleted"
   type        = number
