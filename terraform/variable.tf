@@ -4,11 +4,6 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-variable "admin_ip" {
-  description = "Public IP address of the administrator (CIDR format)"
-  type        = string
-  default     = "212.93.150.80/32"
-}
 
 variable "ssh_public_key_path" {
   description = "Path to the local SSH public key"
