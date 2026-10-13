@@ -72,6 +72,13 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+data "http" "my_ip" {
+  url = "https://api.ipify.org"
+}
+
+locals {
+  current_admin_ip = "${chomp(data.http.my_ip.response_body)}/32"
+}
 # 5. Security Group (nexus-k3s-sg)
 resource "aws_security_group" "node_sg" {
   name        = "nexus-k3s-sg"
@@ -83,7 +90,7 @@ resource "aws_security_group" "node_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.admin_ip]
+    cidr_blocks = [local.current_admin_ip]
   }
 
   ingress {
@@ -107,7 +114,7 @@ resource "aws_security_group" "node_sg" {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
-    cidr_blocks = [var.admin_ip]
+    cidr_blocks = [local.current_admin_ip]
   }
 
   egress {
