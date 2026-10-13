@@ -235,6 +235,17 @@ resource "aws_instance" "k3s_node" {
     }
   }
 
+
+  lifecycle {
+    ignore_changes = [
+      ami,
+      subnet_id,
+      vpc_security_group_ids,
+      key_name,
+      root_block_device
+    ]
+  }
+}
   tags = {
     Name        = var.node_name
     Environment = var.environment
