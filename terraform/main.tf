@@ -245,7 +245,7 @@ resource "aws_instance" "k3s_node" {
       root_block_device
     ]
   }
-}
+
   tags = {
     Name        = var.node_name
     Environment = var.environment
